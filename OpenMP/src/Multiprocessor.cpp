@@ -2,6 +2,7 @@
 #include <omp.h>
 #include <cfloat>
 #include <chrono>
+#include <cmath>
 #include <iostream>
 
 HpcSamples::Multiprocessor::Multiprocessor(uint16_t size)
@@ -58,7 +59,7 @@ bool HpcSamples::Multiprocessor::CheckResult()
     {
         for (int j = 0; j < _size; j++)
         {
-            float diff = abs(expected - _matrixC[i][j]);
+            float diff = fabsf(expected - _matrixC[i][j]);
             if (diff > FLT_EPSILON) return false;
         }
     }
