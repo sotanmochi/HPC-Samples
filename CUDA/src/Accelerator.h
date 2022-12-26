@@ -11,13 +11,14 @@ namespace CudaSamples
             ~Accelerator();
 
             void Initialize();
-            bool CheckResult();
+            float CheckResult();
             void RunOnAccelerator();
             void RunOnCpu();
 
         private:
             uint16_t _n;
-            uint32_t _size;
+            uint32_t _matrixSize;
+            size_t _matrixMemorySize;
             float *_matrixA;
             float *_matrixB;
             float *_matrixC;

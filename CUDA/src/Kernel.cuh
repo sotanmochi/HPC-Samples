@@ -3,6 +3,7 @@
 
 namespace CudaSamples
 {
+void CalculateMachineEpsilon();
 void MallocCudaMemory(void **pointer, size_t size);
 void FreeCudaMemory(void *pointer);
 void CopyCudaMemoryHostToDevice(void *dst, void *src, size_t nbytes);

@@ -6,44 +6,90 @@
 namespace CudaSamples
 {
 
-__global__ void NaiveMatrixMultiplyKernel(float *matrixA, float *matrixB, float *matrixC)
+__global__ void CalculateMachineEpsilonKernel()
 {
-	unsigned int indexX = threadIdx.x + blockIdx.x * blockDim.x;
-	unsigned int indexY = threadIdx.y + blockIdx.y * blockDim.y;
+	// printf("CalculateMachineEpsilonKernel\n");
 
-	unsigned int width = gridDim.x * blockDim.x;
-	unsigned int height = gridDim.y * blockDim.y;
+	float feps = 1.0f;
+	for (float ftmp = feps + 1.0f; ftmp > 1; ftmp = feps + 1.0f)
+	{
+		feps /= 2.0f;
+	}
 
-	// ToDo
+	printf("Machine epsilon CUDA: %-16g\n", feps * 2.0f);
+}
 
-	matrixC[indexY * width + indexX] = 1;
+__global__ void NaiveMatrixMultiplyKernel(int n, float *matrixA, float *matrixB, float *matrixC)
+{
+	unsigned int col = threadIdx.x + blockIdx.x * blockDim.x;
+	unsigned int row = threadIdx.y + blockIdx.y * blockDim.y;
+
+	unsigned int a_index = row * n;
+	unsigned int b_index = col;
+	unsigned int c_index = row * n + col;
+
+	float sum = 0.0f;
+
+	if (row >= n || col >= n)
+	{
+		// printf("Skiped for (%d, %d)\n", row, col);
+		return;
+	}
+
+	for (int i = 0; i < n; i++)
+	{
+		sum += matrixA[a_index] * matrixB[b_index];
+		a_index += 1;
+		b_index += n;
+	}
+
+	matrixC[c_index] = sum;
+}
+
+void CalculateMachineEpsilon()
+{
+	CalculateMachineEpsilonKernel<<<1,1>>>();
+	cudaDeviceSynchronize();
 }
 
 void MallocCudaMemory(void **pointer, size_t size)
 {
-	cudaMalloc(pointer, size);
+	cudaError_t err = cudaMalloc(pointer, size);
+    std::cout << "CudaError@MallocCudaMemory: " << err << std::endl;
 }
 
 void FreeCudaMemory(void *pointer)
 {
-	cudaFree(pointer);
+	cudaError_t err = cudaFree(pointer);
+    std::cout << "CudaError@FreeCudaMemory: " << err << std::endl;
 }
 
 void CopyCudaMemoryHostToDevice(void *dst, void *src, size_t nbytes)
 {
-	cudaMemcpy(dst, src, nbytes, cudaMemcpyHostToDevice);
+	cudaError_t err = cudaMemcpy(dst, src, nbytes, cudaMemcpyHostToDevice);
+    std::cout << "CudaError@CopyCudaMemoryHostToDevice: " << err << std::endl;
 }
 
 void CopyCudaMemoryDeviceToHost(void *dst, void *src, size_t nbytes)
 {
-	cudaMemcpy(dst, src, nbytes, cudaMemcpyDeviceToHost);
+	cudaError_t err = cudaMemcpy(dst, src, nbytes, cudaMemcpyDeviceToHost);
+    std::cout << "CudaError@CopyCudaMemoryDeviceToHost: " << err << std::endl;
 }
 
 void NaiveMatrixMultiply(int n, float *deviceMatrixA, float *deviceMatrixB, float *deviceMatrixC)
 {
-	dim3 blockSize(BLOCK_SIZE, BLOCK_SIZE, 1);
-	dim3 gridSize(n/BLOCK_SIZE, n/BLOCK_SIZE, 1);
-    NaiveMatrixMultiplyKernel<<<gridSize, blockSize>>>(deviceMatrixA, deviceMatrixB, deviceMatrixC);
+	int blockWidth = BLOCK_SIZE;
+	int blockHeight = BLOCK_SIZE;
+	int gridWidth  = ceil((float)n/blockWidth);
+	int gridHeight = ceil((float)n/blockHeight);
+
+	dim3 blockSize(blockWidth, blockHeight, 1);
+	dim3 gridSize(gridWidth, gridHeight, 1);
+
+    NaiveMatrixMultiplyKernel<<<gridSize, blockSize>>>(n, deviceMatrixA, deviceMatrixB, deviceMatrixC);
+
+	cudaError_t err = cudaGetLastError();
+    std::cout << "CudaError@NaiveMatrixMultiply: " << err << std::endl;
 }
 
 }
