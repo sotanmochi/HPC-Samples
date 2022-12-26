@@ -14,7 +14,7 @@ int main()
     std::cout << "FLT_EPSILON: " << FLT_EPSILON << std::endl;
     std::cout << std::endl;
 
-    int n = 1024;
+    int n = 128;
     CudaSamples::Accelerator accelerator(n);
     accelerator.Initialize();
 

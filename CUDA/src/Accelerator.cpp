@@ -50,7 +50,7 @@ void CudaSamples::Accelerator::Initialize()
 float CudaSamples::Accelerator::CheckResult()
 {
     float diffSum = 0.0f;
-    double expected = 0.1f * _n;
+    float expected = 0.1f * _n;
 
     for (int j = 0; j < _n; j++) // Row
     {
@@ -65,7 +65,14 @@ float CudaSamples::Accelerator::CheckResult()
             //
             float diff = fabsf(expected - value);
             bool approximately = diff < fmax(0.000001f * fmax(fabsf(expected), fabsf(value)), FLT_EPSILON * 8);
-            if (!approximately) diffSum += diff / fmax(fabsf(expected), fabsf(value));
+            if (!approximately)
+            {
+                diffSum += diff;
+                // printf("----------\n");
+                // printf("Expected[%d][%d]: %-16g\n", i, j, expected);
+                // printf("Actual[%d][%d]: %-16g\n", i, j, value);
+                // printf("Diff[%d][%d]: %-16g\n", i, j, fabsf(expected - value));
+            }
         }
     }
 
@@ -77,6 +84,7 @@ void CudaSamples::Accelerator::RunOnAccelerator()
     std::cout << std::endl;
     std::cout << "----------" << std::endl;
     std::cout << "Matrix Multiplication on Accelerator (using CUDA)" << std::endl;
+    std::cout << "----------" << std::endl;
 
     std::chrono::system_clock::time_point start, end;
     start = std::chrono::system_clock::now();
@@ -93,6 +101,7 @@ void CudaSamples::Accelerator::RunOnAccelerator()
 
     float diffSum = CheckResult();
 
+    std::cout << "----------" << std::endl;
     std::cout << "Elapsed time: " << elapsedTimeMilliseconds << " [ms]" << std::endl;
     std::cout << "CheckResult: " << (diffSum ? "NG" : "OK") << std::endl;
     std::cout << "DiffSum: " << diffSum << std::endl;
@@ -104,6 +113,7 @@ void CudaSamples::Accelerator::RunOnCpu()
     std::cout << std::endl;
     std::cout << "----------" << std::endl;
     std::cout << "Matrix Multiplication on CPU (Single Thread)" << std::endl;
+    std::cout << "----------" << std::endl;
 
     std::chrono::system_clock::time_point start, end;
 
@@ -129,6 +139,7 @@ void CudaSamples::Accelerator::RunOnCpu()
 
     float diffSum = CheckResult();
 
+    std::cout << "----------" << std::endl;
     std::cout << "Elapsed time: " << elapsedTimeMilliseconds << " [ms]" << std::endl;
     std::cout << "CheckResult: " << (diffSum ? "NG" : "OK") << std::endl;
     std::cout << "DiffSum: " << diffSum << std::endl;
